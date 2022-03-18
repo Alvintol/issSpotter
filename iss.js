@@ -1,5 +1,5 @@
 const request = require('request');
-const { urlIP, urlGEO, myIP } = require('./IP')
+const { urlIP, urlGEO, urlISS, myIP, } = require('./IP')
 
 
 const fetchMyIP = callback => {
@@ -11,7 +11,8 @@ const fetchMyIP = callback => {
       callback(Error(msg), null);
       return;
     }
-    return callback(null, JSON.parse(body).ip);
+    const ip = JSON.parse(body).ip;
+    return callback(null, ip);
   });
 }
 
@@ -27,12 +28,46 @@ const fetchCoordsByIP = (ip, callback) => {
       const msg = `Status Code ${response.statusCode} when fetching GEO info. Response: ${body}`;
       return callback(Error(msg), null);
     }
-
-    return JSON.parse(body).ip && callback(null, data)
+    return callback(null, data)
   })
 };
 
+const fetchISSFlyOverTimes = (coords, callback) => {
+  request(urlISS, (error, response, body) => {
+
+    if (error) return (error, null);
+
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching ISS info. Response: ${body}`;
+      return callback(Error(msg), null);
+    }
+    const passTimes = JSON.parse(body).response;
+    return callback(null, passTimes)
+  })
+};
+
+const nextISSTimesForMyLocation = callback => {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null)
+    }
+    fetchCoordsByIP(ip, (error, coords) => {
+      if (error) {
+        return callback(error, null);
+      }
+      fetchISSFlyOverTimes(coords, (error, passTimes) => {
+        if (error) {
+          return callback(error, null);
+        }
+        callback(null, passTimes)
+      })
+    })
+  })
+}
+
 module.exports = {
   fetchMyIP,
-  fetchCoordsByIP
+  fetchCoordsByIP,
+  fetchISSFlyOverTimes,
+  nextISSTimesForMyLocation
 };
