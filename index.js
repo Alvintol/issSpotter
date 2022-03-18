@@ -19,13 +19,13 @@ const { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocat
 //   console.log('Gotcha! Returned Fly Over Times: ', data);
 // })
 
-const printPassTimes = function(passTimes) {
-  for (const pass of passTimes) {
+const printPassTimes = passTimes => {
+  passTimes.forEach(pass => {
     const datetime = new Date(0);
     datetime.setUTCSeconds(pass.risetime);
     const duration = pass.duration;
     console.log(`Next pass at ${datetime} for ${duration} seconds!`);
-  }
+  })
 };
 
 nextISSTimesForMyLocation((error, passTimes) => {
